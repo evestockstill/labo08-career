@@ -1,16 +1,26 @@
 require('dotenv').config();
-
+require('colors');
 const request = require('supertest');
 const app = require('../lib/app');
 const connect = require('../lib/utils/connect');
 const mongoose = require('mongoose');
 const Event = require('../lib/models/Event');
+const Recipe = require('../lib/models/Recipe');
 
 describe('event routes', () => {
   beforeAll(() => {
     connect();
   });
 
+  let eventRecipeType;
+  let recipe;
+beforeEach(async() => {
+eventRecipeType = await Event
+.create({
+  type: 'Cookies',
+  
+})
+})
   beforeEach(() => {
     return mongoose.connection.dropDatabase();
   });
