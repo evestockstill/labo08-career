@@ -1,20 +1,44 @@
 require('dotenv').config();
-
 const request = require('supertest');
+
 const app = require('../lib/app');
 const connect = require('../lib/utils/connect');
 const mongoose = require('mongoose');
 const Recipe = require('../lib/models/Recipe');
+const Event = require('../lib/models/Event');
 
 describe('recipe routes', () => {
   beforeAll(() => {
     connect();
   });
-
   beforeEach(() => {
     return mongoose.connection.dropDatabase();
   });
 
+  let cookieRecipe;
+  let recipesEvents;
+  beforeEach(async() => {
+    cookieRecipe = await Recipe
+      .create({
+        name: 'cookies',
+        ingredients: [
+          { amount: 2, measurement: 'cup', name: 'flour' }
+        ],
+        directions: [
+          'preheat oven to 375',
+          'mix ingredients',
+          'put dough on cookie sheet',
+          'bake for 10 minutes'
+        ]
+      });
+    recipesEvents = await Event.create([
+      { recipeId: cookieRecipe._id, dateOfEvent: new Date(), notes: 'yummy', rating: 5 }
+      // { recipeId: cookieRecipe._id, dateOfEvent: new Date(), notes: 'gross', rating: 1 },
+      // { recipeId: cookieRecipe._id, dateOfEvent: new Date(), notes: 'ok', rating: 3 }
+    ]);
+  });
+
+ 
   afterAll(() => {
     return mongoose.connection.close();
   });
@@ -58,7 +82,6 @@ describe('recipe routes', () => {
       { name: 'cake', directions: [] },
       { name: 'pie', directions: [] }
     ]);
-
     return request(app)
       .get('/api/v1/recipes')
       .then(res => {
@@ -70,29 +93,36 @@ describe('recipe routes', () => {
         });
       });
   });
+  it('gets all recipes by ingredient', async() => {
+    const recipes = await Recipe.create([
+      { name: 'cookies', directions: [], ingredients: [{
+        name: 'flour',
+        amount: 2,
+        measurement: 'cup'
+      }]
+      }]);
+    return request(app)
+      .get('/api/v1/recipes?ingredient=flour')
+      .then(res => {
+        recipes.forEach(recipe => {
+          expect(res.body).toContainEqual({
+            _id: recipe._id.toString(),
+            name: recipe.name
+          });
+        });
+      });
+  });
 
   it('gets a recipe by id', async() => {
-    const recipe = await Recipe.create({
-      name: 'cookies',
-      ingredients: [
-        { name: 'flour', amount: 1, measurement: 'cup' }
-      ],
-      directions: [
-        'preheat oven to 375',
-        'mix ingredients',
-        'put dough on cookie sheet',
-        'bake for 10 minutes'
-      ],
-    });
 
     return request(app)
-      .get(`/api/v1/recipes/${recipe._id}`)
+      .get(`/api/v1/recipes/${cookieRecipe._id}`)
       .then(res => {
         expect(res.body).toEqual({
-          _id: expect.any(String),
+          _id: cookieRecipe._id.toString(),
           name: 'cookies',
           ingredients: [
-            { _id: expect.any(String), name: 'flour', amount: 1, measurement: 'cup' }
+            { _id: expect.any(String), amount: 2, measurement: 'cup', name: 'flour' }
           ],
           directions: [
             'preheat oven to 375',
@@ -100,7 +130,8 @@ describe('recipe routes', () => {
             'put dough on cookie sheet',
             'bake for 10 minutes'
           ],
-          __v: 0
+          __v: 0,
+          events: JSON.parse(JSON.stringify(recipesEvents))
         });
       });
   });
@@ -152,6 +183,7 @@ describe('recipe routes', () => {
         'put dough on cookie sheet',
         'bake for 10 minutes'
       ],
+     
     });
 
     return request(app)
