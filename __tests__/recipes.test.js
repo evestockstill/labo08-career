@@ -32,9 +32,9 @@ describe('recipe routes', () => {
         ]
       });
     recipesEvents = await Event.create([
-      { recipeId: cookieRecipe._id, dateOfEvent: new Date(), notes: 'yummy', rating: 5 },
-      { recipeId: cookieRecipe._id, dateOfEvent: new Date(), notes: 'gross', rating: 1 },
-      { recipeId: cookieRecipe._id, dateOfEvent: new Date(), notes: 'ok', rating: 3 }
+      { recipeId: cookieRecipe._id, dateOfEvent: new Date(), notes: 'yummy', rating: 5 }
+      // { recipeId: cookieRecipe._id, dateOfEvent: new Date(), notes: 'gross', rating: 1 },
+      // { recipeId: cookieRecipe._id, dateOfEvent: new Date(), notes: 'ok', rating: 3 }
     ]);
   });
 
