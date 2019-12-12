@@ -1,5 +1,4 @@
 require('dotenv').config();
-require('colors');
 const request = require('supertest');
 
 const app = require('../lib/app');
@@ -94,6 +93,25 @@ describe('recipe routes', () => {
         });
       });
   });
+  it('gets all recipes by ingredient', async() => {
+    const recipes = await Recipe.create([
+      { name: 'cookies', directions: [], ingredients: [{
+        name: 'flour',
+        amount: 2,
+        measurement: 'cup'
+      }]
+      }]);
+    return request(app)
+      .get('/api/v1/recipes?ingredient=flour')
+      .then(res => {
+        recipes.forEach(recipe => {
+          expect(res.body).toContainEqual({
+            _id: recipe._id.toString(),
+            name: recipe.name
+          });
+        });
+      });
+  });
 
   it('gets a recipe by id', async() => {
 
@@ -165,6 +183,7 @@ describe('recipe routes', () => {
         'put dough on cookie sheet',
         'bake for 10 minutes'
       ],
+     
     });
 
     return request(app)
